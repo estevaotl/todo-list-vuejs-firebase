@@ -25,6 +25,7 @@
 
 <script>
 import { db } from '../firebaseDb';
+import { collection, addDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
 import Vue from 'vue';
 
 export default {
@@ -32,31 +33,92 @@ export default {
   data() {
     return {
       form: {
+        id: "",
         subject: "",
         description: ""
       }
+    };
+  },
+  created() {
+    this.form.id = this.$route.params.id;
+    if (this.form.id) {
+      this.fetchTask();
     }
   },
   methods: {
-    saveTask() {
-      db.collection('tasks').add(this.form).then( () => {
+    async saveTask() {
+      try {
+        if (this.form.id) {
+          await this.updateTask();
+        } else {
+          await this.insertTask();
+        }
+
         this.clearForm();
-        this.makeToast();
         this.$router.push({ name: 'list' });
-      });
+      } catch (error) {
+        console.error("Erro ao salvar tarefa:", error);
+        this.makeToast("Erro ao salvar tarefa", 'danger');
+      }
     },
+    async insertTask() {
+      try {
+        const tasksCollection = collection(db, "tasks");
+        await addDoc(tasksCollection, {
+          subject: this.form.subject,
+          description: this.form.description
+        });
+        this.makeToast("Tarefa salva com sucesso", 'success');
+      } catch (error) {
+        console.error("Erro ao adicionar tarefa:", error);
+        this.makeToast("Erro ao adicionar tarefa", 'danger');
+      }
+    },
+
+    async updateTask() {
+      try {
+        // Função para atualizar uma tarefa existente
+        const taskDocRef = doc(db, "tasks", this.form.id);
+        await updateDoc(taskDocRef, {
+          subject: this.form.subject,
+          description: this.form.description
+        });
+        this.makeToast("Tarefa atualizada com sucesso", 'success');
+      } catch (error) {
+        console.error("Erro ao atualizar tarefa:", error);
+        this.makeToast("Erro ao atualizar tarefa", 'danger');
+      }
+    },
+
     clearForm() {
       this.form.subject = "";
       this.form.description = "";
     },
-    makeToast() {
+
+    makeToast(message, variant) {
       const vm = new Vue();
-      vm.$bvToast.toast(`Tarefa salva com sucesso`, {
-        title: 'Sucesso',
+      vm.$bvToast.toast(message, {
+        title: variant === 'success' ? 'Sucesso' : 'Erro',
         autoHideDelay: 5000,
-        variant: 'success'
-      })
+        variant: variant
+      });
+    },
+    async fetchTask() {
+      try {
+        const taskDocRef = doc(db, "tasks", this.form.id);
+        const taskSnapshot = await getDoc(taskDocRef);
+
+        if (taskSnapshot.exists()) {
+          const task = taskSnapshot.data();
+          this.form.subject = task.subject;
+          this.form.description = task.description;
+        } else {
+          console.log("Tarefa não encontrada");
+        }
+      } catch (error) {
+        console.error("Erro ao obter tarefa:", error);
+      }
     }
   }
-}
+};
 </script>
