@@ -63,6 +63,7 @@ export default {
     },
     async insertTask() {
       try {
+        delete this.form.id;
         const tasksCollection = collection(db, "tasks");
         await addDoc(tasksCollection, {
           subject: this.form.subject,
@@ -77,7 +78,6 @@ export default {
 
     async updateTask() {
       try {
-        // Função para atualizar uma tarefa existente
         const taskDocRef = doc(db, "tasks", this.form.id);
         await updateDoc(taskDocRef, {
           subject: this.form.subject,

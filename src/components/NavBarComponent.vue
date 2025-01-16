@@ -7,7 +7,6 @@
 
             <b-collapse id="nav-collapse" is-nav>
                 <b-navbar-nav>
-                    <b-nav-item to="/">Link</b-nav-item>
                     <b-nav-item to="/list">Lista de tarefas</b-nav-item>
                     <b-nav-item to="/form">Cadastrar tarefa</b-nav-item>
                 </b-navbar-nav>
